@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Car viewer</title>
+<style>
+  :root { --bg1:#1b2028; --bg2:#07080a; --ink:#eef1f5; --mute:#8b94a3; --line:#2b323d; --accent:#1f6feb; --amber:#ffb347; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; overflow:hidden; color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:radial-gradient(120% 90% at 50% 35%,var(--bg1),var(--bg2)); }
+  #stage, #stage canvas { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+  .glass { background:rgba(20,24,30,.78); border:1px solid var(--line); backdrop-filter:blur(8px); }
+  #ui { opacity:0; transition:opacity .6s; } #ui.ready { opacity:1; }
+  #cust { position:fixed; top:max(14px,env(safe-area-inset-top)); left:14px; padding:11px 16px; border-radius:999px; color:var(--ink); font:700 14px system-ui,sans-serif; cursor:pointer; }
+  #kmh { position:fixed; top:max(18px,env(safe-area-inset-top)); right:18px; font:700 22px system-ui,sans-serif; opacity:0; transition:opacity .4s; } .driving #kmh { opacity:1; }
+  #views { position:fixed; bottom:max(18px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; gap:4px; padding:5px; border-radius:999px; }
+  #views button { font:600 15px system-ui,sans-serif; color:var(--mute); background:transparent; border:0; padding:11px 20px; border-radius:999px; cursor:pointer; }
+  #views button.on { background:var(--accent); color:#fff; }
+  #sig { position:fixed; bottom:calc(max(18px,env(safe-area-inset-bottom)) + 62px); left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+  #sig button { width:54px; height:46px; border-radius:14px; border:1px solid var(--line); background:rgba(20,24,30,.78); color:#c8cdd6; font-size:22px; cursor:pointer; backdrop-filter:blur(8px); }
+  #sig button.on { background:#6b4300; border-color:var(--amber); color:#ffd27a; animation:blink .7s steps(1) infinite; } #sig #sH.on { color:#ff6a5e; }
+  @keyframes blink { 50% { background:rgba(20,24,30,.78); } }
+  #drive { position:fixed; bottom:calc(max(18px,env(safe-area-inset-bottom)) + 62px); left:0; right:0; display:none; justify-content:space-between; padding:0 18px; pointer-events:none; }
+  .driving #drive { display:flex; } .driving #sig { bottom:calc(max(18px,env(safe-area-inset-bottom)) + 124px); }
+  #drive button { pointer-events:auto; width:92px; height:92px; border-radius:50%; border:0; font:800 16px system-ui,sans-serif; color:#fff; touch-action:none; user-select:none; }
+  #brake { background:#c0392b; } #go { background:#1f9d55; }
+  #panel { position:fixed; left:0; right:0; bottom:0; max-height:62vh; overflow:auto; transform:translateY(105%); transition:transform .35s ease; border-radius:22px 22px 0 0; padding:16px 18px calc(24px + env(safe-area-inset-bottom)); z-index:10; }
+  #panel.open { transform:none; }
+  #panel header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-weight:800; }
+  #panelclose { background:transparent; border:0; color:var(--mute); font-size:22px; cursor:pointer; }
+  .sec h3 { margin:14px 0 8px; font:700 12px system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--mute); }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .sw { width:34px; height:34px; border-radius:50%; border:2px solid transparent; outline:1px solid #3a4250; cursor:pointer; padding:0; } .sw.on { border-color:#fff; }
+  .pill { font:600 14px system-ui,sans-serif; color:var(--mute); background:#171b22; border:1px solid var(--line); padding:9px 16px; border-radius:999px; cursor:pointer; } .pill.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .row input[type=range] { flex:1; accent-color:var(--accent); } .lbl { font-size:13px; color:var(--mute); }
+  #loading { position:fixed; inset:0; display:grid; place-content:center; text-align:center; gap:14px; padding:24px; background:#07080a; z-index:20; }
+  #loadtext { color:var(--mute); line-height:1.5; max-width:420px; } #loadtext code { color:var(--ink); }
+  #track { width:220px; height:4px; background:#1a1f27; border-radius:4px; overflow:hidden; margin:0 auto; } #bar { height:100%; width:0; background:var(--accent); transition:width .15s; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="ui">
+  <button id="cust" class="glass">🎨 Customize</button>
+  <div id="kmh">0 km/h</div>
+  <div id="sig"><button id="sL" aria-label="Left signal">◀</button><button id="sH" aria-label="Hazard">⚠</button><button id="sR" aria-label="Right signal">▶</button></div>
+  <div id="drive"><button id="brake">BRAKE</button><button id="go">GO</button></div>
+  <div id="views" class="glass"><button data-v="orbit" class="on">Car</button><button data-v="screen">Screen</button><button data-v="drive">Drive</button></div>
+  <div id="panel" class="glass"><header><span>Customize</span><button id="panelclose">✕</button></header><div id="panelbody"></div></div>
+</div>
+<div id="loading"><div id="loadtext">Loading car…</div><div id="track"><div id="bar"></div></div></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
